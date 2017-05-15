@@ -3,19 +3,22 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <unistd.h>    //write
-
-// create socket, connect, recv/send
+#include <string.h>
+// create socket, connect, recvfrom/sendto
 
 
 int main(int argc, char *argv[])
 {
-	int sock;
+	int sock,server_size;
 	struct sockaddr_in server;
-	int size,i,j;
+	int size,temp;
+	int i=0,j=0;
 	float result;
+	char temp[20];
 
+	server_size=sizeof(server);
 	// create the socket
-	sock=socket(AF_INET,SOCK_STREAM,0);
+	sock=socket(AF_INET,SOCK_DGRAM,0);
 	if (sock == -1) printf("Could not create socket\n");
 	printf("Client socket created \n");
 
@@ -24,16 +27,21 @@ int main(int argc, char *argv[])
 	server.sin_addr.s_addr= inet_addr("127.0.0.1");
 	server.sin_port=htons(6760);
 
-	// connect to a remote server
-	if (connect(sock,(struct sockaddr *)&server,sizeof(server))<0){
-		perror("Connecting to the sever failed\n");
-		return 1;
-	}	
-	printf("Connection successful!\n");
-	// accept the user data for the matrix
+	
+	// accept the user data for the matrix	
 	printf("Enter the order of the matrix\n");
-	scanf("%d",&size);
-
+	scanf("%s",temp);
+	while(temp[i] != '\0')
+	{
+		if(isdigit(temp[i])){
+				printf("Valid input\n");
+				}
+			else{
+				printf("Invalid input\n");
+			}
+		i++;
+		
+	}	
 	// initialize the size of the matrix
 	float matrix[size][size];
 
@@ -48,23 +56,23 @@ int main(int argc, char *argv[])
 	printf("The matrix is \n");
 	for(i=0;i<size;i++){
 		for(j=0;j<size;j++){
-			printf("%f\t",matrix[i][j]);
+			printf("%.2f\t",matrix[i][j]);
 		}
 		printf("\n");
 	}
 
 	// send the size of the matrix
-	if (send(sock,&size,sizeof(size),0)<0){
+	if (sendto(sock,&size,sizeof(size),0,(struct sockaddr *)&server,server_size)<0){
 		printf("Sending size to Server failed\n");
 		return 1;
 	} 	
 	//send to the matrix to the server 
-	if (send(sock,&matrix,sizeof(matrix),0)<0){
+	if (sendto(sock,&matrix,sizeof(matrix),0,(struct sockaddr *)&server,server_size)<0){
 		printf("Sending matrix to Server failed\n");
 		return 1;
 	}
 	// receive the determinant from the server side 
-	if(recv(sock,&result,sizeof(result),0)<0){
+	if(recvfrom(sock,&result,sizeof(result),0,(struct sockaddr *)&server,&server_size)<0){
 		printf("Matrix not received\n");
 		return 1;
 	} 

@@ -3,20 +3,23 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <unistd.h>    //write
+#include <sys/types.h>
 
+// create socket, bind,recvfrom/sendto
 
-// create socket, bind,listen, accept, recv/send
 int size;
 float determinant(float matrix[size][size],int size);
 
 int main(int argc, char *argv[])
 {
-	int socket_desc,client_sock,connection;
+	int socket_desc,client_size;
 	struct sockaddr_in server,client;
-	int i , j; //counters
+	int i , j; //counters	
 	float result;
-	// create the socket
-	socket_desc=socket(AF_INET,SOCK_STREAM,0);
+
+	client_size= sizeof(client);
+	// create the udp socket
+	socket_desc=socket(AF_INET,SOCK_DGRAM,0);
 	if (socket_desc == -1) printf("Could not create socket\n");
 
 	// prepare the socaddr_in structure for the server
@@ -31,42 +34,31 @@ int main(int argc, char *argv[])
 	}
 	printf("Bind Success!\n");
 
-	// listen
-	listen(socket_desc,5);
-
-	// accept incoming connections
-	connection=sizeof(struct sockaddr_in);
-	client_sock=accept(socket_desc,(struct sockaddr*)&client,(socklen_t *)&connection);
-	if(client_sock<0){
-		printf("Could not connect to Client: Accept failed!\n");
-		return 1;
-	}
-	printf("Connection accepted\n");
-
 	// receive the order of the matrix
-	if(recv(client_sock,&size,sizeof(size),0)<0){
+	if(recvfrom(socket_desc,&size,sizeof(size),0,(struct sockaddr*)&client,&client_size)<0){
 		printf("Size not recieved\n");
 		return 1;
 	};
-
+	printf("The order of the matrix received : %d\n",size);
+	
+	// allocate the size of the matrix based on what the client chooses
 	float matrix[size][size]; 
-
 	// receive the matrix
-	if(recv(client_sock,&matrix,sizeof(matrix),0)<0){
-		printf("Matrix not recieved\n");
+	if(recvfrom(socket_desc,&matrix,sizeof(matrix),0,(struct sockaddr *)&client,&client_size)<0){
+		printf("Matrix not received\n");
 		return 1;
 	}
 	printf("The matrix is\n");
 	for(i=0;i<size;i++){
 		for(j=0;j<size;j++){
-			printf("%f\t",matrix[i][j]);
+			printf("%.2f\t",matrix[i][j]);
 		}
 		printf("\n");
 	}
 	result=determinant(matrix,size);
 
 	// send the results to the client
-	if(send(client_sock,&result,sizeof(result),0)<0){
+	if(sendto(socket_desc,&result,sizeof(result),0,(struct sockaddr*)&client,client_size)<0){
 		printf("Sending results to the client failed \n");
 		return 1;
 	}
