@@ -1,22 +1,27 @@
 #include <stdio.h>
-#include <string.h>    //strlen
+#include <string.h>    
+#include <stdlib.h>
 #include <sys/socket.h>
-#include <arpa/inet.h> //inet_addr
-#include <unistd.h>    //write
+#include <arpa/inet.h> 
+#include <unistd.h>    
 #include <string.h>
 // create socket, connect, recvfrom/sendto
 
 
 int main(int argc, char *argv[])
 {
-	int sock,server_size;
+	int sock,server_size,size,i=0,j=0,portno;
 	struct sockaddr_in server;
-	int size,temp;
-	int i=0,j=0;
 	float result;
 	char temp[20];
 
 	server_size=sizeof(server);
+	if (argc < 2) {
+       fprintf(stderr,"usage %s port\n", argv[0]);
+       exit(0);
+    }
+	portno=atoi(argv[1]);
+	
 	// create the socket
 	sock=socket(AF_INET,SOCK_DGRAM,0);
 	if (sock == -1) printf("Could not create socket\n");
@@ -25,23 +30,12 @@ int main(int argc, char *argv[])
 	// set the sock_addr properties
 	server.sin_family= AF_INET;
 	server.sin_addr.s_addr= inet_addr("127.0.0.1");
-	server.sin_port=htons(6760);
+	server.sin_port=htons(portno);
 
 	
 	// accept the user data for the matrix	
 	printf("Enter the order of the matrix\n");
-	scanf("%s",temp);
-	while(temp[i] != '\0')
-	{
-		if(isdigit(temp[i])){
-				printf("Valid input\n");
-				}
-			else{
-				printf("Invalid input\n");
-			}
-		i++;
-		
-	}	
+	scanf("%d",&size);	
 	// initialize the size of the matrix
 	float matrix[size][size];
 

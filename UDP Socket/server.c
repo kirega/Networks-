@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>    //strlen
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <unistd.h>    //write
@@ -12,10 +13,16 @@ float determinant(float matrix[size][size],int size);
 
 int main(int argc, char *argv[])
 {
-	int socket_desc,client_size;
+	int socket_desc,client_size,portno;
 	struct sockaddr_in server,client;
 	int i , j; //counters	
 	float result;
+
+	if (argc < 2) {
+         fprintf(stderr,"ERROR, no port provided\n");
+         exit(1);
+    }
+ 	portno=atoi(argv[1]);
 
 	client_size= sizeof(client);
 	// create the udp socket
@@ -25,7 +32,7 @@ int main(int argc, char *argv[])
 	// prepare the socaddr_in structure for the server
 	server.sin_family= AF_INET;
 	server.sin_addr.s_addr= INADDR_ANY;
-	server.sin_port=htons(6760);
+	server.sin_port=htons(portno);
 
 	// bind
 	if (bind(socket_desc,(struct sockaddr *)&server,sizeof(server))<0){

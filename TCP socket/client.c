@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>    //strlen
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <unistd.h>    //write
@@ -9,11 +10,16 @@
 
 int main(int argc, char *argv[])
 {
-	int sock;
+	int sock,portno;
 	struct sockaddr_in server;
 	int size,i,j;
 	float result;
 
+	if (argc < 2) {
+       fprintf(stderr,"usage %s port\n", argv[0]);
+       exit(0);
+    }
+	portno=atoi(argv[1]);
 	// create the socket
 	sock=socket(AF_INET,SOCK_STREAM,0);
 	if (sock == -1) printf("Could not create socket\n");
@@ -22,11 +28,11 @@ int main(int argc, char *argv[])
 	// set the sock_addr properties
 	server.sin_family= AF_INET;
 	server.sin_addr.s_addr= inet_addr("127.0.0.1");
-	server.sin_port=htons(6760);
+	server.sin_port=htons(portno); 	
 
 	// connect to a remote server
 	if (connect(sock,(struct sockaddr *)&server,sizeof(server))<0){
-		perror("Connecting to the sever failed\n");
+		perror("Connecting to the server failed\n");
 		return 1;
 	}	
 	printf("Connection successful!\n");
